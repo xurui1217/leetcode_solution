@@ -1355,3 +1355,706 @@ class Solution:
         return res
 ```
 
+## 丑数
+
+把只包含质因子2、3和5的数称作丑数（Ugly Number）。例如6、8都是丑数，但14不是，因为它包含质因子7。 习惯上我们把1当做是第一个丑数。求按从小到大的顺序的第N个丑数。
+
+``` python
+# -*- coding:utf-8 -*-
+class Solution:
+    def GetUglyNumber_Solution(self, index):
+        # write code here
+        if index<=0:
+            return 0
+        count=1
+        result=1
+        result_lis=set()
+        while count<index:
+            result_lis.add(2*result)
+            result_lis.add(3*result)
+            result_lis.add(5*result)
+            result=min(result_lis)
+            result_lis.remove(result)
+            count+=1
+        return result
+```
+
+## 第一次只出现一次的字符
+
+用dic换时间
+
+``` python
+# -*- coding:utf-8 -*-
+import collections
+class Solution:
+    def FirstNotRepeatingChar(self, s):
+        # write code here
+        dic={}
+        dic_id={}
+        s=list(s)
+        for i in range(len(s)):
+            if s[i] not in dic:
+                dic[s[i]]=[i,1]
+            else:
+                dic[s[i]][1]+=1
+        if dic:
+            min_id=len(s)
+            for k in dic:
+                if dic[k][1]==1 and dic[k][0]<min_id:
+                    min_id=dic[k][0]
+            return min_id
+        else:
+            return -1
+```
+
+## 数组中的逆序对
+
+首先需要看一下归并排序到底是什么
+
+``` python
+class Solution:
+    def __init__(self):
+        self.count = 0
+
+    def merge(self, left, right):
+        tmp = []
+        p1 = 0
+        p2 = 0
+        while p1 <= len(left)-1 and p2 <= len(right)-1:
+            if left[p1] < right[p2]:
+                tmp.append(left[p1])
+                p1 += 1
+            else:
+                tmp.append(right[p2])
+                p2 += 1
+        while p1 <= len(left)-1:
+            tmp.append(left[p1])
+            p1 += 1
+        while p2 <= len(right)-1:
+            tmp.append(right[p2])
+            p2 += 1
+        return tmp
+
+    def merge_sort(self, arr):
+        if len(arr) == 0:
+            return []
+        if len(arr) == 1:
+            return arr
+        mid = len(arr)//2
+        left = self.merge_sort(arr[:mid])
+        right = self.merge_sort(arr[mid:])
+        return self.merge(left, right)
+
+    def InversePairs(self, data):
+        # write code here
+        if len(data) < 2:
+            return 0
+        res = self.merge_sort(data)
+        return res
+
+func = Solution()
+print(func.InversePairs(data=[1, 5, 6, 7, 2, 3, 4, 0]))
+```
+
+注意在python里面用self函数修改list的值也可以，但是不好理解，不如直接return一个新的数组来代替组合什么的。
+
+递归需要注意先写终止条件，再写递归，最后输出是什么
+
+有了以上几条就可以开始写逆序对了
+
+* 分析一下，逆序对求数量的代码应该是写在self.merge里面，合并left和right的时候需要比较两个list中的数值，我们可以从简单到复杂来看，比如left和right中只有一个数字的时候会怎么样。
+* 如果left比right中的数字大，那么就count+=1然后排序组合好以后就不再管内部他们自己的顺序了，已经排好序
+* 现在来看有多个数字的情况，left[i]比right[j]小，tmp.append(left[i])，left[i]与right[j]后面均不可能构成逆序对，i+=1之后继续
+* 如果left[i]>right[j]了，那么left[i]和right[j]可以构成一个逆序对，并且left[i]后面的数都能和right[j]构成逆序对，那么tmp.appnend(right[j])，j+=1之后继续
+* 这样肯定会有一个list最先走到头，那么直接把剩下来的那个接到tmp后面即可，中间的一些逆序对已经计算过了个数
+
+根据上述分析得到代码如下，其实只要改一处地方即可
+
+``` python
+# -*- coding:utf-8 -*-
+class Solution:
+    def __init__(self):
+        self.count = 0
+
+    def merge(self, left, right):
+        tmp = []
+        p1 = 0
+        p2 = 0
+        while p1 <= len(left)-1 and p2 <= len(right)-1:
+            if left[p1] < right[p2]:
+                tmp.append(left[p1])
+                p1 += 1
+            else:
+                # 就是改的这里
+                self.count += len(left)-1-p1+1
+                tmp.append(right[p2])
+                p2 += 1
+        while p1 <= len(left)-1:
+            tmp.append(left[p1])
+            p1 += 1
+        while p2 <= len(right)-1:
+            tmp.append(right[p2])
+            p2 += 1
+        return tmp
+
+    def merge_sort(self, arr):
+        if len(arr) == 0:
+            return []
+        if len(arr) == 1:
+            return arr
+        mid = len(arr)//2
+        left = self.merge_sort(arr[:mid])
+        right = self.merge_sort(arr[mid:])
+        return self.merge(left, right)
+
+    def InversePairs(self, data):
+        # write code here
+        if len(data) < 2:
+            return 0
+        res = self.merge_sort(data)
+        return self.count%1000000007
+```
+
+## 两个链表的第一个公共节点
+
+一般看到这种题从后往前看比较好，从最后的一个节点开始往前遍历得到最后一个相同的节点即可，那么就有点像先进后出，用栈来表示
+
+``` python
+# -*- coding:utf-8 -*-
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+class Solution:
+    def FindFirstCommonNode(self, pHead1, pHead2):
+        # write code here
+        s_1=[]
+        s_2=[]
+        if not pHead1 or not pHead2:
+            return None
+        node=pHead1
+        while node:
+            s_1.append(node)
+            node=node.next
+        node=pHead2
+        while node:
+            s_2.append(node)
+            node=node.next
+        pre=None
+        while s_1 and s_2:
+            cur_1=s_1.pop()
+            cur_2=s_2.pop()
+            if cur_1!=cur_2:
+                return pre
+            else:
+                pre=cur_1
+        return pre
+```
+
+## 数字在排序数组中出现的次数
+
+2行，直接用collections库
+
+``` python
+# -*- coding:utf-8 -*-
+import collections
+class Solution:
+    def GetNumberOfK(self, data, k):
+        # write code here
+        dic=collections.Counter(data)
+        return dic[k]
+```
+
+要是不用collections。Counter也能做，重点是分析复杂度
+
+需要对二分查找非常熟悉才行
+
+``` python
+# -*- coding:utf-8 -*-
+class Solution:
+    def GetNumberOfK(self, data, k):
+        # write code here
+        if data == []:
+            return 0
+        l = self.getfirstnum(data, k)
+        r = self.getlastnum(data, k)
+        return r-l+1
+
+    def getfirstnum(self, data, k):
+        l = 0
+        r = len(data)-1
+        while l <= r:
+            mid = (l+r)//2
+            if data[mid] < k:
+                l = mid+1
+            else:
+                r = mid-1
+        return l
+
+    def getlastnum(self, data, k):
+        l = 0
+        r = len(data)-1
+        while l <= r:
+            mid = (l+r)//2
+            if data[mid] <= k:
+                l = mid+1
+            else:
+                r = mid-1
+        return r
+```
+
+## 二叉树的深度
+
+DFS没什么说的，注意我是用的栈实现的，用迭代的算法
+
+``` python
+# -*- coding:utf-8 -*-
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+class Solution:
+    def TreeDepth(self, pRoot):
+        # write code here
+        if not pRoot:
+            return 0
+        s=[]
+        node=pRoot
+        high=0
+        max_depth=0
+        while node or s:
+            while node:
+                high+=1
+                s.append((node,high))
+                node=node.left
+            node,high=s.pop()
+            if not node.left and not node.right:
+                if high>max_depth:
+                    max_depth=high
+            node=node.right
+        return max_depth
+```
+
+## 二叉搜索树的第K大节点
+
+需要用到中序遍历，全局的变量
+
+``` python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def __init__(self):
+        self.count=0
+        self.res=None
+
+    def mid_order(self,node):
+        if node.right:
+            self.mid_order(node.right)
+        if self.count==1:
+            self.res=node
+        self.count-=1
+        if node.left:
+            self.mid_order(node.left)
+
+    def kthLargest(self, root: TreeNode, k: int) -> int:
+        if not root or k<=0:
+            return None
+        self.count=k
+        self.mid_order(root)
+        return self.res.val
+```
+
+## 平衡二叉树
+
+递归算法，判断左右子树是不是平衡二叉树，平衡二叉树表示的是左右子树的高度差小于等于1的二叉树，使用到了一个求数的高度的函数，这样不是最简单的，最简单的是使用后序遍历的算法最简单。
+
+``` python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def getdepth(self,root):
+        if not root:
+            return 0
+        left=self.getdepth(root.left)
+        right=self.getdepth(root.right)
+        return max(left,right)+1
+    def isBalanced(self, root: TreeNode) -> bool:
+        if not root:
+            return True
+        left=self.getdepth(root.left)
+        right=self.getdepth(root.right)
+        if abs(left-right)>1:
+            return False
+        return self.isBalanced(root.left) and self.isBalanced(root.right)
+```
+
+## 数组中数字出现的次数
+
+要求比较严格，时间是O(n), 空间是O(1)，所以所有排序全部不能用，因为排序的复杂度至少为O(NlogN)
+
+另外找方法，使用位运算，异或属性，这里需要看一下异或是什么
+
+异或的性质，两个数字异或的结果a^b是将 a 和 b 的二进制每一位进行运算，得出的数字。 运算的逻辑是，如果同一位的数字相同则为 0，不同则为 1
+
+异或的规律，任何数和本身异或则为0，任何数和 0 异或是本身
+
+异或满足交换律，比如17^19^17=19，这个非常重要
+
+### 1个数字出现一次，其他数字出现两次的算法
+
+全员异或的结果就是出现一次的数，需要应用到交换律和数字与0异或结果为数字
+
+``` python
+class Solution:
+    def singleNumber(self, nums: List[int]) -> int:
+        single_number = 0
+        for num in nums:
+            single_number=single_number^num
+        return single_number
+```
+
+### 2个数字出现一次，其他出现两次
+
+我们进行一次全员异或操作，得到的结果就是那两个只出现一次的不同的数字的异或结果。
+
+我们刚才讲了异或的规律中有一个任何数和本身异或则为0， 因此我们的思路是能不能将这两个不同的数字分成两组 A 和 B。
+
+分组需要满足两个条件.
+
+两个独特的的数字分成不同组
+
+相同的数字分成相同组
+
+这样每一组的数据进行异或即可得到那两个数字。
+
+``` python
+class Solution:
+    def singleNumbers(self, nums: List[int]) -> List[int]:
+        ret = 0  # 所有数字异或的结果
+        a = 0
+        b = 0
+        for n in nums:
+            ret ^= n
+        # 找到第一位不是0的
+        h = 1
+        while(ret & h == 0):
+            h <<= 1
+        for n in nums:
+            # 根据该位是否为0将其分为两组
+            if (h & n == 0):
+                a ^= n
+            else:
+                b ^= n
+
+        return [a, b]
+```
+
+## 1个数字出现一次，其他出现3次
+
+还是用位运算的特点，如果一个数出现过了3次，那么该二进制位数上如果有1的地方应该1的总和是能被3整除的，如果这个位置的1的和不能被3整除，那么出现一次的那个数字在这个位置一定是1
+
+``` python
+class Solution:
+    def singleNumber(self, nums: List[int]) -> int:
+        if not nums: 
+            return []
+        res=0# 最终计算出来的数，即要找出的数字
+        #计算32位上每一位的和，如果这个位上的和，不能被3整除，这要找个这个数字上的bit位是1
+        for i in range(32):
+            bit_sum=0#每一位上的和
+            mask=1<<i#每一次要操作的位
+            for num in nums:
+                if num&mask !=0:
+                    bit_sum+=1
+            if bit_sum%3!=0:
+                res=res|mask# 如果此位上为1，每一次都和mask或运算
+        return res
+```
+
+## 和为s的两个数字
+
+我的想法是dic存起来，时间O(n)，每个遍历一次
+
+``` python
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        dic={}
+        for i in range(len(nums)):
+            if nums[i] in dic:
+                return [nums[i],target-nums[i]]
+            else:
+                dic[target-nums[i]]=nums[i]
+        return None
+```
+
+书上说可以用双指针来做，应该也可以，很简单写一下
+
+``` python
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        if len(nums)<2:
+            return None
+        left=0
+        right=len(nums)-1
+        while left<right:
+            if nums[left]+nums[right]==target:
+                return [nums[left],nums[right]]
+            if nums[left]+nums[right]<target:
+                left+=1
+            if nums[left]+nums[right]>target:
+                right-=1
+        return None
+```
+
+## 和为s的连续正数序列
+
+数学题，就是一个一元二次方程
+
+``` python
+import math
+class Solution:
+    def findContinuousSequence(self, target: int) -> List[List[int]]:
+        res=[]
+        for x in range(1,target//2+1):
+            c=x-x*x-2*target
+            y=(math.sqrt(1-4*c)-1)/2
+            if y==int(y):
+                y=int(y)
+                res.append([i for i in range(x,y+1)])
+        return res
+
+```
+
+## 翻转单词顺序
+
+用好stripe(), split()
+
+``` python
+class Solution:
+    def reverseWords(self, s: str) -> str:
+        s=s.strip()
+        lis=s.split()[::-1]
+        return ' '.join(lis)
+```
+
+## 左旋转字符串
+
+``` python
+class Solution:
+    def reverseLeftWords(self, s: str, n: int) -> str:
+        return s[n:]+s[:n]
+```
+
+## 滑动窗口最大值
+
+这里用一个暴力法加减少运算的一个方法，有更好的方法，队列什么的，这里就不用了
+
+``` python
+class Solution:
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        if k<=0 or k>len(nums):
+            return []
+        res=[]
+        lis=nums[0:k]
+        max_temp=max(lis)
+        res.append(max_temp)
+        for i in range(k,len(nums)):
+            lis=nums[i-k+1:i+k]
+            if nums[i]>max_temp:
+                max_temp=nums[i]
+            elif max_temp==nums[i-k]:
+                max_temp=max(nums[i-k+1:i+1])
+            res.append(max_temp)
+        return res
+```
+
+##　队列里的最大值
+
+果然使用了双边队列，一个队列保存最大值，一个队列保存值，和求栈里的最大值异曲同工。
+
+``` python
+import collections
+class MaxQueue:
+    def __init__(self):
+        self.helper=collections.deque()
+        self.q=collections.deque()
+
+    def max_value(self) -> int:
+        if self.helper:
+            return self.helper[0]
+        else:
+            return -1
+
+    def push_back(self, value: int) -> None:
+        self.q.append(value)
+        while self.helper and self.helper[-1]<value:
+            self.helper.pop()
+        self.helper.append(value)
+
+    def pop_front(self) -> int:
+        if self.q:
+            if self.helper[0]==self.q[0]:
+                self.helper.popleft()
+                return self.q.popleft()
+            else:
+                return self.q.popleft()
+        else:
+            return -1
+
+# Your MaxQueue object will be instantiated and called as such:
+# obj = MaxQueue()
+# param_1 = obj.max_value()
+# obj.push_back(value)
+# param_3 = obj.pop_front()
+```
+
+## n个骰子的点数
+
+DP方法，已知n-1个骰子的点数分布情况，求出再加一个骰子的点数分布情况
+
+dp[n][j] += dp[n-1][j - i]
+
+考虑好边界情况，我们可以直接知道的状态是啥，就是第一阶段的状态：投掷完 11 枚骰子后，它的可能点数分别为 1, 2, 3, ... , 6并且每个点数出现的次数都是1
+
+这个需要动一下脑子，有点绕晕了，虽然最后还是写出来了，但是中间的list变量意义，索引意义都要搞明白
+
+``` python 
+class Solution:
+
+    def twoSum(self, n: int):
+        num_sum = [0 for i in range(n+1)]
+        dp = [[] for i in range(n+1)]
+        dp[0].append(1)
+        for j in range(1, 6+1):
+            dp[1].append(1)
+            num_sum[1] = 6
+        for i in range(2, n+1):
+            for j in range(i, 6*i+1):
+                count = 0
+                for k in range(1, 6+1):
+                    if i-1 <= j-k <= 6*(i-1):
+                        count += dp[i-1][j-k-(i-1)]
+                dp[i].append(count)
+            num_sum[i] = num_sum[i-1]*6
+        return [x/num_sum[n] for x in dp[n]]
+
+``` 
+
+## 扑克牌中的顺子
+
+从[0,0,1,2,...,13]抽取5个数字，查看是不是顺子，其中0可以当做任意的数字！！！
+
+函数的输入就是一个list，包含5个数字，从上面得到的，函数用来判断True or False
+
+这道题的中间判断还是有点多的，必须要考虑一些情况
+
+```python
+class Solution:
+    def isStraight(self, nums):
+        if len(nums) < 5:
+            return False
+        nums.sort()
+        # print(nums)
+        l = 0
+        r = 4
+        for i in range(0, 5):
+            if nums[i] != 0:
+                l = i
+                break
+        dic = {}
+        for i in range(l, r+1):
+            if nums[i] in dic:
+                return False
+            else:
+                dic[nums[i]] = 1
+        if nums[r]-nums[l] <= 4:
+            return True
+        else:
+            return False
+
+```
+
+## 圆圈中最后剩下的数字
+
+约瑟夫环问题，链表来模拟, 没用，超时，很坑，不过算的是对的
+
+``` python
+class Node:
+    def __init__(self, x):
+        self.val = x
+        self.next = None
+
+class Solution:
+    def lastRemaining(self, n: int, m: int) -> int:
+        if n<=0:
+            return None
+        head = Node(0)
+        cur = head
+        for i in range(1, n):
+            tmp = Node(i)
+            cur.next = tmp
+            cur = cur.next
+        cur.next = head
+        cur = head
+        # for i in range(5):
+        #     print(cur.val)
+        #     cur=cur.next
+        while cur.next != cur:
+            for i in range(m-1):
+                cur=cur.next
+            print(f'delete:{cur.val}')
+            cur.val=cur.next.val
+            cur.next=cur.next.next
+        return cur.val
+```
+
+公式法，其实就是数学运算
+
+f(N, M)=(f(N−1, M)+M)%N
+
+理解这个递推式的核心在于关注胜利者的下标位置是怎么变的。每杀掉一个人，其实就是把这个数组向前移动了M位。然后逆过来，就可以得到这个递推式
+
+现在改为人数改为N，报到M时，把那个人杀掉，那么数组是怎么移动的？
+
+每杀掉一个人，下一个人成为头，相当于把数组向前移动M位。若已知N-1个人时，胜利者的下标位置位f(N−1, M)f(N-1, M)f(N−1, M)，则N个人的时候，就是往后移动Ms
+
+``` python
+class Solution:
+    def lastRemaining(self, n: int, m: int) -> int:
+        p=0
+        for i in range(2,n+1):
+            p=(p+m)%i
+        return p
+```
+
+## 股票的最大利润
+
+时间O(N),类似于Dp
+
+``` python
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        # dp问题吧，dp[i]为i天之前的最小值
+        if not prices:
+            return 0
+        dp=[0]*len(prices)
+        dp[0]=prices[0]
+        max_price=0
+        for i in range(1,len(prices)):
+            dp[i]=min(dp[i-1],prices[i])
+            max_price=max(max_price,prices[i]-dp[i])
+        return max_price
+```
+
+## 

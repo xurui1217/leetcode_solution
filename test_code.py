@@ -1,26 +1,40 @@
 # -*- coding:utf-8 -*-
 import heapq
+import collections
+from collections import deque
 
 
-# -*- coding:utf-8 -*-
+class Node:
+    def __init__(self, x):
+        self.val = x
+        self.next = None
+
+
 class Solution:
-    def PrintMinNumber(self, numbers):
-        # write code here
-        if not numbers:
-            return ''
-        numbers = [str(num) for num in numbers]
-        for i in range(1, len(numbers)):
-            for j in range(len(numbers)-i):
-                if numbers[j]+numbers[j+1] > numbers[j+1]+numbers[j]:
-                    numbers[j], numbers[j+1] = numbers[j+1], numbers[j]
-        res = ''
-        for word in numbers:
-            res += word
-        return res
+    def lastRemaining(self, n: int, m: int) -> int:
+        head = Node(0)
+        cur = head
+        for i in range(1, n):
+            tmp = Node(i)
+            cur.next = tmp
+            cur = cur.next
+        cur.next = head
+        cur = head
+        # for i in range(5):
+        #     print(cur.val)
+        #     cur=cur.next
+        while cur.next != cur:
+            for i in range(m-1):
+                cur=cur.next
+            print(f'delete:{cur.val}')
+            cur.val=cur.next.val
+            cur.next=cur.next.next
+        return cur.val
 
 
 func = Solution()
-print(func.PrintMinNumber(numbers=[3, 32, 321]))
+res = func.lastRemaining(5, 3)
+print(res)
 
 '''
 def partition(data_list, begin, end):
