@@ -2133,3 +2133,26 @@ class Solution:
         return route_p[min(len(route_p),len(route_q))-1]
 ```
 
+如果用递归的方法来写应该怎么写，找公共节点，再继续左右子树找，如果没有就返回root
+
+``` python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def lowestCommonAncestor(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:
+        if root==None or root==p or root==q:
+            return root
+        left=self.lowestCommonAncestor(root.left,p,q)
+        right=self.lowestCommonAncestor(root.right,p,q)
+        if not left:
+            return right
+        if not right:
+            return left
+        return root
+```
+
