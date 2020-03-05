@@ -2040,7 +2040,7 @@ class Solution:
 
 ## 股票的最大利润
 
-时间O(N),类似于Dp
+时间O(N), 类似于Dp
 
 ``` python
 class Solution:
@@ -2057,4 +2057,79 @@ class Solution:
         return max_price
 ```
 
-## 
+## 二叉搜索树的最近公共祖先
+
+二叉搜索树和二叉树不一样，它是有自己的顺序的，不需要用递归来算了
+
+``` python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        if not root:
+            return None
+        cur=root
+        while cur:
+            if (p.val<=cur.val and q.val>=cur.val) or (p.val>=cur.val and q.val<=cur.val):
+                return cur
+            if p.val<cur.val and q.val<cur.val:
+                cur=cur.left
+            elif p.val>cur.val and q.val>cur.val:
+                cur=cur.right
+        return cur
+```
+
+## 二叉树的最近公共祖先
+
+这个只能用递归等方法来计算了，先看DFS算法，求出路径上所有的点，注意和求路径的方法一样，都是把node和route放在s栈里面，然后需要用的时候再拿出来，依旧需要注意DFS算法的终止条件是在while node里面入栈之前判断是否是我们需要的节点，在入栈的时候也需要route[:]进行一个拷贝。
+
+``` python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def findroute(self,root,endnode):
+        if not root:
+            return []
+        s=[]
+        route=[]
+        node=root
+        while node or s:
+            while node:
+                route.append(node)
+                s.append((node,route[:]))
+                if node==endnode:
+                    return route[:]
+                node=node.left
+            node,route=s.pop()
+            node=node.right
+        return []
+
+    def printnode(self,route_lis):
+        print('start print')
+        for i in range(len(route_lis)):
+            print(route_lis[i].val)
+
+    def lowestCommonAncestor(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:
+        if not root:
+            return None
+        route_p=self.findroute(root,p)
+        route_q=self.findroute(root,q)
+        i=0
+        while i<min(len(route_p),len(route_q)):
+            if route_p[i]!=route_q[i]:
+                return route_p[i-1]
+            else:
+                i+=1
+        return route_p[min(len(route_p),len(route_q))-1]
+```
+
