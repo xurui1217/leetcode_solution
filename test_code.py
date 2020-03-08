@@ -11,65 +11,61 @@ class Node:
 
 
 class Solution:
-    def lastRemaining(self, n: int, m: int) -> int:
-        head = Node(0)
-        cur = head
-        for i in range(1, n):
-            tmp = Node(i)
-            cur.next = tmp
-            cur = cur.next
-        cur.next = head
-        cur = head
-        # for i in range(5):
-        #     print(cur.val)
-        #     cur=cur.next
-        while cur.next != cur:
-            for i in range(m-1):
-                cur=cur.next
-            print(f'delete:{cur.val}')
-            cur.val=cur.next.val
-            cur.next=cur.next.next
-        return cur.val
+    def findMedianSortedArrays(self, nums1, nums2):
+        m, n = len(nums1), len(nums2)
+        if m == 0 and n == 0:
+            return None
+        if m > n:
+            nums1, nums2, m, n = nums2, nums1, n, m
+        if m == 0:
+            left = nums2[(n-1)//2]
+            right = nums2[(n)//2]
+            res = (left+right)/2
+            return res
+        if (m+n) % 2 == 0:
+            imin, imax, half_len = 0, m-1, (m+n)//2
+            # 就先看偶数的情况
+            while imin < imax:
+                i = (imin+imax)//2
+                j = half_len-(i+1)-1
+                # print(i, j)
+                if max(nums1[i], nums2[j]) <= min(nums1[i+1], nums2[j+1]):
+                    break
+                if nums1[i] > nums2[j+1]:
+                    imax = i
+                if nums2[j] > nums1[i+1]:
+                    imin = i+1
+                # print(imin, imax)
+            jmin = half_len-(imin+1)-1
+            if imin == m-1:
+                left = nums1[-1]
+                right = nums2[0]
+            elif imin == 0:
+                left = nums2[-1]
+                right = nums1[0]
+            else:
+                left = max(nums1[imin], nums2[jmin])
+                right = min(nums1[imin+1], nums2[jmin+1])
+            res = (left+right)/2
+        else:
+            imin, imax, half_len = 0, m-1, (m+n)//2+1
+            # 看奇数的情况
+            while imin < imax:
+                i = (imin+imax)//2
+                j = half_len-(i+1)-1
+                # print(i, j)
+                if max(nums1[i], nums2[j]) <= min(nums1[i+1], nums2[j+1]):
+                    break
+                if nums1[i] > nums2[j+1]:
+                    imax = i
+                if nums2[j] > nums1[i+1]:
+                    imin = i+1
+                # print(imin, imax)
+            jmin = half_len-(imin+1)-1
+            res = max(nums1[imin], nums2[jmin])
+        return res
 
 
 func = Solution()
-res = func.lastRemaining(5, 3)
+res = func.findMedianSortedArrays([3], [-2, -1])
 print(res)
-
-'''
-def partition(data_list, begin, end):
-    # 选择最后一个元素作为分区键
-    partition_key = data_list[end]
-
-    # index为分区键的最终位置
-    # 比partition_key小的放左边，比partition_key 大的放右边
-    index = begin
-    for i in range(begin, end):
-        if data_list[i] < partition_key:
-            data_list[i], data_list[index] = data_list[index], data_list[i]
-            index += 1
-
-    data_list[index], data_list[end] = data_list[end], data_list[index]
-    return index
-
-
-def find_top_k(data_list, K):
-    length = len(data_list)
-    begin = 0
-    end = length-1
-    index = partition(data_list, begin, end)
-    while index != length - K:
-        if index > length - K:
-            end = index-1
-            index = partition(data_list, begin, index-1)
-        else:
-            begin = index+1
-            index = partition(data_list, index+1, end)
-    return data_list[index]
-
-
-data_list = [25, 77, 52, 49, 85, 28, 1, 28, 100, 36]
-print(data_list)
-print(find_top_k(data_list, 7))
-print(data_list)
-'''
