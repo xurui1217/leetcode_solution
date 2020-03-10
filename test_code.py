@@ -2,53 +2,43 @@
 import heapq
 import collections
 from collections import deque
-
-
-class Node:
-    def __init__(self, x):
-        self.val = x
-        self.next = None
+import random
 
 
 class Solution:
-    def myAtoi(self, str: str) -> int:
-        res = 0
-        ch = str
-        int_max = 2**31-1
-        int_min = -2**31
-        i = 0
-        if ch == '':
-            return 0
-        while i <= len(ch)-1 and ch[i] == ' ':
-            i += 1
-        if i == len(ch):
-            return 0
-        # print(i)
-        # 第一个字符
-        flag = 1
-        if ch[i] == '+':
-            i += 1
-            flag = 1
-        elif ch[i] == '-':
-            i += 1
-            flag = -1
-        elif ch[i].isdigit():
-            flag = 1
-        else:
-            return 0
-        # print(i)
-        # 第一个数字
-        while i <= len(ch)-1 and ch[i].isdigit():
-            res = res*10+int(ch[i])
-            i+=1
-        res *= flag
-        if res>int_max:
-            return int_max
-        if res<int_min:
-            return int_min
-        return res
+    def __init__(self, ch=[]):
+        self.ch = ch
+
+    def searchfirstword(self, id1, id2):
+        ch1 = self.ch[id1-1]
+        ch2 = self.ch[id2-1]
+        for i in range(min(len(ch1), len(ch2))):
+            if ch1[i] != ch2[i]:
+                return i
+            else:
+                if i == min(len(ch1), len(ch2))-1:
+                    return i
+        return 0
 
 
-func = Solution()
-res = func.myAtoi('42')
-print(res)
+if __name__ == "__main__":
+    stopword = ''
+    inp = []
+    for line in iter(input, stopword):
+        inp.append(line)
+    n = int(inp[0])
+    ch = [k for k in inp[1:n+1]]
+    # print(ch)
+    num_search = [k for k in inp[n+1:]]
+    # print(num_search)
+    func = Solution(ch)
+    res = []
+    for i in range(len(num_search)):
+        search_id = num_search[i].split()
+        id1 = int(search_id[0])
+        id2 = int(search_id[1])
+        # print(ch_search_1, ch_search_2)
+        res.append(func.searchfirstword(id1, id2))
+    # print(res)
+    for k in res:
+        print(k)
