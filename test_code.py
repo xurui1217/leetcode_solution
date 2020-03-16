@@ -1,44 +1,42 @@
 # -*- coding:utf-8 -*-
-import heapq
 import collections
-from collections import deque
-import random
 
 
 class Solution:
-    def __init__(self, ch=[]):
-        self.ch = ch
+    def letterCombinations(self, digits: str) -> [str]:
+        if not digits:
+            return []
+        dic = {'2': ['a', 'b', 'c'],
+               '3': ['d', 'e', 'f'],
+               '4': ['g', 'h', 'i'],
+               '5': ['j', 'k', 'l'],
+               '6': ['m', 'n', 'o'],
+               '7': ['p', 'q', 'r', 's'],
+               '8': ['t', 'u', 'v'],
+               '9': ['w', 'x', 'y', 'z']}
+        # res = []
+        # for word in dic[digits[0]]:
+        #     res.append(word)
+        # k = 1
+        # while k <= len(digits)-1:
+        #     las = []
+        #     for cur in res:
+        #         for word in dic[digits[k]]:
+        #             las.append(cur+word)
+        #     res = las[:]
+        #     k += 1
+        q = collections.deque()
+        q.append('')
+        for num in digits:
+            size = len(q)
+            words = dic[num]
+            for i in range(size):
+                tmp = q.popleft()
+                for j in words:
+                    q.append(tmp+j)
+        return list(q)
 
-    def searchfirstword(self, id1, id2):
-        ch1 = self.ch[id1-1]
-        ch2 = self.ch[id2-1]
-        for i in range(min(len(ch1), len(ch2))):
-            if ch1[i] != ch2[i]:
-                return i
-            else:
-                if i == min(len(ch1), len(ch2))-1:
-                    return i
-        return 0
 
-
-if __name__ == "__main__":
-    stopword = ''
-    inp = []
-    for line in iter(input, stopword):
-        inp.append(line)
-    n = int(inp[0])
-    ch = [k for k in inp[1:n+1]]
-    # print(ch)
-    num_search = [k for k in inp[n+1:]]
-    # print(num_search)
-    func = Solution(ch)
-    res = []
-    for i in range(len(num_search)):
-        search_id = num_search[i].split()
-        id1 = int(search_id[0])
-        id2 = int(search_id[1])
-        # print(ch_search_1, ch_search_2)
-        res.append(func.searchfirstword(id1, id2))
-    # print(res)
-    for k in res:
-        print(k)
+func = Solution()
+res = func.letterCombinations('23')
+print(res)

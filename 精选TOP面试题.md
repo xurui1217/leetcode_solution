@@ -243,5 +243,318 @@ class Solution:
 
 ## 正则表达式匹配
 
-```python
+有几种方法，回溯，动态规划，一般用DP方法，设定dp[i][j]为s[i]和p[j]结尾的序列是不是满足匹配，有0或者1两种状态。
+
+看转移方程：已知dp[i-1][j-1]的值，计算dp[i][j]的值，需要看s[i]和p[j]
+
+1. s[i]==p[j] or p[j]=='.'这样的话dp[i][j]=dp[i-1][j-1]，很明显可以匹配
+2. p[j]=='*'这种情况是匹配之前一个字符的重复，所以需要看p[j-1]和s[i]的关系又可以分为
+
+p[j-1]!=s[i]，那么相当于这个'*'是没有匹配到重复的字符，dp[i][j]=dp[i][j-2]
+
+p[j-1]==s[i] or p[j-1]=='.'，那么应该是找到了重复的字符，当然也可以额把它去掉当做没有重复字符=dp[i][j-2]，或者dp[i][j]=dp[i-1][j]
+
+实际写代码的时候这种题目经常会出现string越界的问题，或者是string的空很难判断的问题，可以用前l个s字符和前r个p字符，然后对应的index为i=l-1，j=r-1，循环的话可以从1开始循环。
+
+``` python
+# -*- coding:utf-8 -*-
+
+class Solution:
+    def isMatch(self, s: str, p: str):
+        if not p:
+            return not s
+        if not s and len(p) == 1:
+            return False
+        m, n = len(s), len(p)
+        dp = [[0 for _ in range(n+1)] for _ in range(m+1)]
+        dp[0][0] = 1
+        dp[0][1] = 0
+        for c in range(2, n+1):
+            j = c-1
+            if p[j] == '*':
+                dp[0][c] = dp[0][c-2]
+        for r in range(1, m+1):
+            i = r-1
+            for c in range(1, n+1):
+                j = c-1
+                if s[i] == p[j] or p[j] == '.':
+                    dp[r][c] = dp[r-1][c-1]
+                elif p[j] == '*':
+                    if p[j-1] == s[i] or p[j-1] == '.':
+                        dp[r][c] = dp[r-1][c] or dp[r][c-2]
+                    else:
+                        dp[r][c] = dp[r][c-2]
+                else:
+                    dp[r][c] = 0
+        print(dp)
+        return True if dp[m][n] else False
+
+func = Solution()
+res = func.isMatch(s='abb', p='ab*')
+# print(res)
 ```
+
+## 盛最多水的容器
+
+感觉是求一个子序列中的最大值和第二大的值的差值，使得这样的差值最大，并且最大值和第二大的值需要在子序列的左右两端。（错误的看题）
+
+正确思路是，只看左右指针的值，然后看较小的值，再乘一个有指针到左指针的长度，就得到了水的面积（求最大面积）。
+
+根据官方发布的解题步骤：以首末两点为起点，较短的那一根向内侧移动，直到两指针相遇。要证明这种方法的正确性，只需要证明该方法得到的面积的移动轨迹经过最大面积。
+
+一般DP或者双指针遍历，这里双指针把，dp应该不行把
+
+``` py
+# -*- coding:utf-8 -*-
+
+class Solution:
+    def maxArea(self, height) -> int:
+        i = 0
+        j = len(height)-1
+        max_volume = 0
+        while i < j:
+            if height[i] <= height[j]:
+                max_volume = max(max_volume, height[i]*(j-i))
+                i += 1
+            else:
+                max_volume = max(max_volume, height[j]*(j-i))
+                j -= 1
+        return max_volume
+
+func = Solution()
+res = func.maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7])
+```
+
+## 罗马数字转整数
+
+hash表，关键是判断是否一个当前字符后面的一个字符比这个字符大，就会需要转换一下值的大小。
+
+``` py
+# -*- coding:utf-8 -*-
+class Solution:
+    def romanToInt(self, s: str) -> int:
+        if not s:
+            return 0
+        dic = {'I': 1,
+               'V': 5,
+               'X': 10,
+               'L': 50,
+               'C': 100,
+               'D': 500,
+               'M': 1000}
+        i = 0
+        count = 0
+        while i <= len(s)-1:
+            if i <= len(s)-2 and dic[s[i]] < dic[s[i+1]]:
+                count += dic[s[i+1]]-dic[s[i]]
+                i += 2
+            else:
+                count += dic[s[i]]
+                i += 1
+        return count
+
+func = Solution()
+res = func.romanToInt("III")
+# print(res)
+```
+
+## 三数之和
+
+直接暴力遍历三个循环，最后需要去除重复的数字，但是会超出时间，不能通过。
+
+``` py
+# -*- coding:utf-8 -*-
+class Solution:
+    def threeSum(self, nums):
+        if len(nums) < 3:
+            return []
+        nums.sort()
+        # print(nums)
+        res = []
+        for i in range(len(nums)-2):
+            for j in range(i+1, len(nums)-1):
+                for k in range(j+1, len(nums)):
+                    if nums[i]+nums[j]+nums[k] == 0:
+                        if [nums[i], nums[j], nums[k]] not in res:
+                            res.append([nums[i], nums[j], nums[k]])
+        return res
+
+func = Solution()
+res = func.threeSum([-1, 0, 1, 2, -1, -4])
+```
+
+优化再优化，考虑其他的办法，双指针，但是需要用到一些数学上的知识，先快速排序O(NlogN)，首先选定第一个值比如为s[k], 第二个值和第三个值为s[i]和s[j]，如果sum==0则i+=1再j-=1, 如果sum>0则j-=1, 如果sum<0则i+=1, 中间需要跳过已经出现过的值，直接去向下一个没有出现过的值。
+
+能通过leetcode了，但是复杂度感觉仍然很高，用时击败5.06%醉了。
+
+``` py
+# -*- coding:utf-8 -*-
+class Solution:
+    def threeSum(self, nums):
+        if len(nums) < 3:
+            return []
+        nums.sort()
+        # print(nums)
+        res = []
+        k = 0
+        while k <= len(nums)-3:
+            i = k+1
+            j = len(nums)-1
+            while i < j:
+                # print(k, i, j)
+                if nums[k]+nums[i]+nums[j] == 0:
+                    res.append([nums[k], nums[i], nums[j]])
+                    while i < j and nums[i+1] == nums[i]:
+                        i += 1
+                    i += 1
+                    while i < j and nums[j-1] == nums[j]:
+                        j -= 1
+                    j -= 1
+                elif nums[k]+nums[i]+nums[j] > 0:
+                    while i < j and nums[j-1] == nums[j]:
+                        j -= 1
+                    j -= 1
+                elif nums[k]+nums[i]+nums[j] < 0:
+                    while i < j and nums[i+1] == nums[i]:
+                        i += 1
+                    i += 1
+                # print(k, i, j)
+            while k <= len(nums)-3 and nums[k+1] == nums[k]:
+                k += 1
+            k += 1
+        return res
+
+func = Solution()
+res = func.threeSum([-1, 0, 1, 2, -1, -4])
+```
+
+## 电话号码的字母组合
+
+python中字符和asc码的转换过程
+
+``` py
+sum = ord('A')
+# 结果为65
+sum = chr(65)
+# 结果为A
+```
+
+结果发现7和9不是按照规则来的，是4个数，重写一下呗
+
+时间复杂度应该挺高的，每一个循环内部还需要再循环，类似于队列的形式
+
+``` py
+# -*- coding:utf-8 -*-
+class Solution:
+    def letterCombinations(self, digits: str) -> [str]:
+        if not digits:
+            return []
+        dic = {'2': ['a', 'b', 'c'],
+               '3': ['d', 'e', 'f'],
+               '4': ['g', 'h', 'i'],
+               '5': ['j', 'k', 'l'],
+               '6': ['m', 'n', 'o'],
+               '7': ['p', 'q', 'r', 's'],
+               '8': ['t', 'u', 'v'],
+               '9': ['w', 'x', 'y', 'z']}
+        res = []
+        for word in dic[digits[0]]:
+            res.append(word)
+        k = 1
+        while k <= len(digits)-1:
+            las = []
+            for cur in res:
+                for word in dic[digits[k]]:
+                    las.append(cur+word)
+            res = las[:]
+            k += 1
+        return res
+
+func = Solution()
+res = func.letterCombinations('23')
+# print(res)
+```
+
+看题解之后，尝试用纯队列写一个版本，这不就是和我上面写的一毛一样嘛，时间用的都一样
+
+``` py
+# -*- coding:utf-8 -*-
+import collections
+
+class Solution:
+    def letterCombinations(self, digits: str) -> [str]:
+        if not digits:
+            return []
+        dic = {'2': ['a', 'b', 'c'],
+               '3': ['d', 'e', 'f'],
+               '4': ['g', 'h', 'i'],
+               '5': ['j', 'k', 'l'],
+               '6': ['m', 'n', 'o'],
+               '7': ['p', 'q', 'r', 's'],
+               '8': ['t', 'u', 'v'],
+               '9': ['w', 'x', 'y', 'z']}
+        q = collections.deque()
+        q.append('')
+        for num in digits:
+            size = len(q)
+            words = dic[num]
+            for i in range(size):
+                tmp = q.popleft()
+                for j in words:
+                    q.append(tmp+j)
+        return list(q)
+
+func = Solution()
+res = func.letterCombinations('23')
+print(res)
+
+```
+
+## 删除链表的倒数第N个节点
+
+双指针从前往后走，第二个指针走到结尾，第一个指针为倒数第n个节点。
+
+注意考虑边界条件，最前面，最后面，中间情况，我这里时间为O(N), 空间O(1), 一次遍历
+
+``` py
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution:
+    def removeNthFromEnd(self, head: ListNode, n: int) -> ListNode:
+        if not head:
+            return None
+        if n<=0:
+            return head
+        # 判断是否n越界了，题目中有n一定有效，那么可以不用判断
+        # 一趟扫描也可以
+        l=head
+        r=head
+        for i in range(n):
+            r=r.next
+        while r:
+            l=l.next
+            r=r.next
+        if l.next:
+            l.val=l.next.val
+            l.next=l.next.next
+        else:
+            if l==head:
+                return None
+            cur=head
+            while cur.next.next:
+                cur=cur.next
+            cur.next=None
+        return head
+```
+
+## 有效的括号
+
+写过了，栈
+
+```py
+```
+

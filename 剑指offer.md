@@ -2155,4 +2155,3 @@ class Solution:
             return left
         return root
 ```
-
