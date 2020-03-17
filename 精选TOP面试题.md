@@ -555,6 +555,209 @@ class Solution:
 
 写过了，栈
 
-```py
+``` py
+class Solution:
+    def isValid(self, s: str) -> bool:
+        if len(s)%2!=0:
+            return False
+        helper=[]
+        dic={'(':')','[':']','{':'}'}
+        for i in range(len(s)):
+            if s[i] in ['(','[','{']:
+                helper.append(s[i])
+            else:
+                if helper==[]:
+                    return False
+                ch=helper.pop()
+                if s[i]!=dic[ch]:
+                    return False
+        if helper!=[]:
+            return False
+        else:
+            return True
+```
+
+## 括号生成
+
+几种办法：DFS，BFS，回溯，动态规划
+
+DFS看的别人的
+
+``` py
+# -*- coding:utf-8 -*-
+from typing import List
+import collections
+
+class Solution:
+    def generateParenthesis(self, n: int) -> List[str]:
+
+        res = []
+        cur_str = ''
+
+        def dfs(cur_str, left, right):
+            """
+            :param cur_str: 从根结点到叶子结点的路径字符串
+            :param left: 左括号还可以使用的个数
+            :param right: 右括号还可以使用的个数
+            :return:
+            """
+            if left == 0 and right == 0:
+                res.append(cur_str)
+                return
+            if left>right:
+                return
+            if left > 0:
+                dfs(cur_str + '(', left - 1, right)
+            if right > 0:
+                dfs(cur_str + ')', left, right - 1)
+
+        dfs(cur_str, n, n)
+        return res
+
+func = Solution()
+res = func.generateParenthesis(3)
+print(res)
+```
+
+动态规划，先求n-1对括号的生成情况，然后再加一对括号看是什么情况。
+
+当我们清楚所有 i<n 时括号的可能生成排列后，对与 i=n 的情况，我们考虑整个括号排列中最左边的括号。
+
+它一定是一个左括号，那么它可以和它对应的右括号组成一组完整的括号 "( )"，我们认为这一组是相比 n-1 增加进来的括号。
+
+``` py
+# -*- coding:utf-8 -*-
+from typing import List
+import collections
+
+class Solution:
+    def generateParenthesis(self, n: int) -> List[str]:
+        if n <= 0:
+            return []
+        res = [['']]
+        res.append(['()'])
+        if n == 1:
+            return res[1]
+        for i in range(2, n+1):
+            cur = []
+            for j in range(i):
+                pre = res[j]
+                las = res[i-1-j]
+                for k1 in pre:
+                    for k2 in las:
+                        fin = '('+k1+')'+k2
+                        cur.append(fin)
+            res.append(cur)
+        return res[n]
+
+func = Solution()
+res = func.generateParenthesis(3)
+print(res)
+```
+
+## 合并K个排序链表
+
+合并k个排序链表，返回合并后的排序链表。请分析和描述算法的复杂度。
+
+暴力法，直接全部遍历一遍O(N)，然后再排序O(NlogN)，再遍历进节点O(N), 空间就N个节点保存值O(N)。
+
+``` py
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution:
+    def mergeKLists(self, lists: List[ListNode]) -> ListNode:
+        res = []
+        for k_head in lists:
+            while k_head:
+                res.append(k_head.val)
+                k_head = k_head.next
+        res.sort()
+        head = ListNode(None)
+        cur = head
+        for i in range(len(res)):
+            cur.next = ListNode(res[i])
+            cur = cur.next
+        return head.next
+```
+
+分治法，两两合并，然后再两两合并
+
+## 两两交换链表中的节点
+
+设定一个虚拟头结点p_head, 然后用pre，cur，las表示是三个节点，用python的牛逼链表节点转移大法：
+
+``` py
+pre.next, cur.next, las.next=cur.next, las.next, cur
+```
+
+``` py
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution:
+    def swapPairs(self, head: ListNode) -> ListNode:
+        if not head:
+            return None
+        p_head=ListNode(None)
+        p_head.next=head
+        pre=p_head
+        cur=head
+        while cur and cur.next:
+            las=cur.next
+            pre.next,cur.next,las.next=cur.next,las.next,cur
+            pre=cur
+            cur=cur.next
+        return p_head.next
+```
+
+## K 个一组翻转链表
+
+和上面的题目差不多，但是翻转的个数是不确定的，所以肯定是要一些list操作，先把头节点和尾部的节点放在list里，从list里从后往前串起来，再把头尾接上去。
+
+注意边界条件也是需要判断好的。我这里重新谢了一个函数来表示K链表的翻转，返回头结点和尾节点，注意翻转链表需要三个指针，per, cur, las一开始需要设置一个空的头节点指针。
+
+``` py
+class Solution:
+    def reverse(self, left, right):
+        pre = None
+        cur = left
+        while cur != right:
+            las = cur.next
+            cur.next = pre
+            pre = cur
+            cur = las
+        cur.next=pre
+        return right, left
+
+    def reverseKGroup(self, head: ListNode, k: int) -> ListNode:
+        if not head:
+            return None
+        p_head = ListNode(None)
+        p_head.next = head
+        pre = p_head
+        cur = p_head
+        flag = True
+        while True:
+            # 找到第K个节点，如果出现None节点则已经到了最后阶段，直接设定flag跳出
+            for i in range(k): 
+                cur = cur.next
+                if not cur:
+                    flag = False
+                    break
+            if flag == False:
+                return p_head.next
+            las = cur.next
+            pre.next, tmp = self.reverse(pre.next, cur)
+            tmp.next = las
+            pre = tmp
+            cur = pre
+        return p_head.next
 ```
 
