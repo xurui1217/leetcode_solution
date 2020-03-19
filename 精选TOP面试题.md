@@ -761,3 +761,334 @@ class Solution:
         return p_head.next
 ```
 
+## 两数相除
+
+两数相除不能用乘法和除法，只能用加减法和移位运算，移位也就是只能乘2。
+
+主要思想是除数一直左移位，代表×2，但是不能超过被除数，并且记录左移的次数代表×了多少个2，这里也直接通过1左移位的方式直接记录了乘多少了，不用再计算次数。
+
+考察了移位符号的运算。
+
+``` py
+# -*- coding:utf-8 -*-
+class Solution:
+    def divide(self, dividend, divisor):
+        if (dividend > 0 and divisor > 0) or (dividend < 0 and divisor < 0):
+            flag = 1
+        else:
+            flag = -1
+        dividend = abs(dividend)
+        divisor = abs(divisor)
+        res = 0
+        while dividend >= divisor:
+            tmp_divisor, count = divisor, 1
+            while dividend >= tmp_divisor:
+                count <<= 1
+                tmp_divisor <<= 1
+                if dividend < tmp_divisor:
+                    count >>= 1
+                    tmp_divisor >>= 1
+                    dividend -= tmp_divisor
+                    res += count
+                    break
+        if flag==-1:
+            res=-res
+        # 这里的判断是否溢出用移位来判断，[-(2<<30),2<<30-1]，减少很多运算量
+        if res > (2 << 30)-1:
+            return (2 << 30)-1
+        elif res < 0-(2 << 30):
+            return 0-(2 << 30)
+        return res
+
+func = Solution()
+res = func.divide(7, -3)
+```
+
+## 旋转搜索排序数组
+
+中间有一个判断是否是在mid左边还是在mid右边，注意二分法的思想，先求一个mid判断这个mid是不是要找到，不是再找[l, mid-1]或者[mid+1.r]
+
+中间有一个判断非常重要 if nums[i] <= nums[mid] 中的等于号
+
+``` py
+# -*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
+from typing import List
+
+class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        if not nums:
+            return -1
+        i, j = 0, len(nums)-1
+        while i <= j:
+            mid = (i+j)//2
+            if nums[mid] == target:
+                return mid
+            if nums[i] <= nums[mid]:  # left
+                if nums[i] <= target < nums[mid]:
+                    j = mid-1
+                else:
+                    i = mid+1
+            else:  # right
+                if nums[mid] < target <= nums[j]:
+                    i = mid+1
+                else:
+                    j = mid-1
+        return -1
+
+func = Solution()
+res = func.search([5, 1, 2, 3, 4], 1)
+print(res)
+
+```
+
+## 在排序数组中查找元素的第一个和最后一个位置
+
+依旧是万年不变的二分法，两个函数，第一个找开头，第二个找结尾，算好mid代表的意思，以及(l+r)//2代表的含义，有的时候永远也取不到r，所以需要用一个math.ceil(x)向上取整。
+
+``` py
+from typing import List
+import math
+
+class Solution:
+    def searchfirst(self, nums, target):
+        l = 0
+        r = len(nums)-1
+        if nums[0] == target:
+            return 0
+        while l <= r:
+            mid = (l+r)//2
+            # print(l, mid, r)
+            if nums[mid] == target and nums[mid-1] != target:
+                return mid
+            if nums[mid] < target:
+                l = mid+1
+            elif nums[mid] > target:
+                r = mid-1
+            else:
+                r = mid
+        return -1
+
+    def searchlast(self, nums, target):
+        l = 0
+        r = len(nums)-1
+        if nums[r] == target:
+            return r
+        while l <= r:
+            mid = math.ceil((l+r)/2)
+            # print(l, mid, r)
+            if nums[mid] == target and nums[mid+1] != target:
+                return mid
+            if target < nums[mid]:
+                r = mid-1
+            elif target > nums[mid]:
+                l = mid+1
+            else:
+                l = mid
+        return -1
+
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        if not nums:
+            return [-1, -1]
+        left = self.searchfirst(nums, target)
+        # print(left)
+        right = self.searchlast(nums, target)
+        # print(right)
+        return [left, right]
+
+func = Solution()
+res = func.searchRange([5, 7, 7, 8, 8, 10], 8)
+# print(res)
+```
+
+## 有效的数独
+
+思路：用多个dic来保证速度，只需要一次遍历即可，时间复杂度为O(n^2), n为几行
+
+``` py
+class Solution:
+    def isValidSudoku(self, board: List[List[str]]) -> bool:
+        lis_row=[]
+        lis_col=[]
+        lis_mini=[]
+        for i in range(9):
+            tmp1,tmp2,tmp3={},{},{}
+            lis_row.append(tmp1)
+            lis_col.append(tmp2)
+            lis_mini.append(tmp3)
+        for i in range(9):
+            for j in range(9):
+                x=board[i][j]
+                if x != '.':
+                    if x in lis_row[i]:
+                        return False
+                    else:
+                        lis_row[i][x]=1
+                    if x in lis_col[j]:
+                        return False
+                    else:
+                        lis_col[j][x]=1
+                    id_mini=(i//3)*3+j//3
+                    if x in lis_mini[id_mini]:
+                        return False
+                    else:
+                        lis_mini[id_mini][x]=1
+        return True
+```
+
+## 外观数列
+
+简单题，考虑的好一点即可
+
+``` py
+class Solution:
+    def countAndSay(self, n: int) -> str:
+        pre='1'
+        if n==1:
+            return pre
+        for i in range(2,n+1):
+            l=0
+            r=0
+            count=0
+            res=''
+            while r<=len(pre)-1:
+                count+=1
+                r+=1
+                if r==len(pre):
+                    res+=str(count)+pre[l]
+                    break
+                if pre[r]!=pre[l]:
+                    res+=str(count)+pre[l]
+                    count=0
+                    l=r
+            pre=res
+        return res
+```
+
+## 接雨水
+
+只能想到暴力法，把当前每一个块的能够积蓄水的高度求出来，然后加起来，O(n^2)
+
+用空间换时间，两次遍历，一遍找到max_left存起来，一遍找到max_right存起来，然后在依次遍历求res
+
+``` py
+# 暴力法，超时
+class Solution:
+    def trap(self, height: List[int]) -> int:
+        n=len(height)
+        res=0
+        for i in range(1,n-1):
+            max_left=height[i]
+            for j in range(i):
+                max_left=max(max_left,height[j])
+            max_right=height[i]
+            for j in range(j+1,n):
+                max_right=max(max_right,height[j])
+            res+=min(max_left,max_right)-height[i]
+        return res
+```
+
+用dic降低时间复杂度，降到了O(N)
+
+``` py
+# 用dic保存left，right减少时间
+class Solution:
+    def trap(self, height: List[int]) -> int:
+        if not height: # 这个判断是一定要写的
+            return 0
+        n=len(height)
+        res=0
+        dic_left={}
+        dic_right={}
+        dic_left[0]=height[0]
+        dic_right[n-1]=height[n-1]
+        for i in range(1,n):
+            dic_left[i]=max(dic_left[i-1],height[i])
+        for i in range(n-2,0,-1):
+            dic_right[i]=max(dic_right[i+1],height[i])
+        for i in range(1,n-1):
+            res+=min(dic_left[i],dic_right[i])-height[i]
+        return res
+```
+
+## 全排列
+
+``` py
+class Solution:
+    def permute(self, nums: List[int]) -> List[List[int]]:
+        # 从简单到复杂DP
+        if not nums:
+            return []
+        res = [[nums[0]]]
+        for i in range(1, len(nums)):
+            cur = []
+            for word in res:
+                print(word)
+                for j in range(len(word)):
+                    tmp = word[:]
+                    tmp.insert(j, nums[i])
+                    cur.append(tmp[:])
+                tmp = word[:]
+                tmp.append(nums[i])
+                cur.append(tmp[:])
+            res = cur[:]
+        return res
+```
+
+## 二维最大点
+
+P为给定的二维平面整数点集。定义 P 中某点x，如果x满足 P 中任意点都不在 x 的右上方区域内（横纵坐标都大于x），则称其为“最大的”。求出所有“最大的”点的集合。（所有点的横坐标和纵坐标都不重复, 坐标轴范围在[0, 1e9) 内）
+
+如下图：实心点为满足条件的点的集合。请实现代码找到集合 P 中的所有 ”最大“ 点的集合并输出。
+
+第一行输入点集的个数 N， 接下来 N 行，每行两个数字代表点的 X 轴和 Y 轴。
+
+对于 50%的数据, 1 <= N <= 10000; 
+
+对于 100%的数据, 1 <= N <= 500000; 
+
+``` txt
+输入
+5
+1 2
+5 3
+4 6
+7 5
+9 0
+输出
+4 6
+7 5
+9 0
+```
+
+通过50%，算法复杂度有点高，时间O(N^2)，考虑更简单的方法，比如dic空间换时间
+
+``` py
+import sys
+ch = sys.stdin.readline().strip()
+num=int(ch)
+grid=[]
+res=[]
+for i in range(num):
+    ch = sys.stdin.readline().strip()
+    tmp=[int(k) for k in ch.split()]
+    grid.append(tmp)
+n=len(grid)
+res.append(grid[0])
+for i in range(1,n):
+    j=0
+    flag=0
+    while res and j<=len(res)-1:
+        if grid[i][0]>res[j][0] and grid[i][1]>res[j][1]:
+            res.pop(j)
+        else:
+            if grid[i][0]<res[j][0] and grid[i][1]<res[j][1]:
+                flag=1
+            j+=1
+    if flag==0:
+        res.append(grid[i])
+res.sort(key=lambda x:x[0])
+for i in range(len(res)):
+    print(res[i][0],res[i][1])
+```
+
