@@ -746,7 +746,7 @@ class Solution:
         flag = True
         while True:
             # 找到第K个节点，如果出现None节点则已经到了最后阶段，直接设定flag跳出
-            for i in range(k): 
+            for i in range(k):
                 cur = cur.next
                 if not cur:
                     flag = False
@@ -1035,60 +1035,271 @@ class Solution:
         return res
 ```
 
-## 二维最大点
+## 字母异位词分组
 
-P为给定的二维平面整数点集。定义 P 中某点x，如果x满足 P 中任意点都不在 x 的右上方区域内（横纵坐标都大于x），则称其为“最大的”。求出所有“最大的”点的集合。（所有点的横坐标和纵坐标都不重复, 坐标轴范围在[0, 1e9) 内）
-
-如下图：实心点为满足条件的点的集合。请实现代码找到集合 P 中的所有 ”最大“ 点的集合并输出。
-
-第一行输入点集的个数 N， 接下来 N 行，每行两个数字代表点的 X 轴和 Y 轴。
-
-对于 50%的数据, 1 <= N <= 10000; 
-
-对于 100%的数据, 1 <= N <= 500000; 
-
-``` txt
-输入
-5
-1 2
-5 3
-4 6
-7 5
-9 0
-输出
-4 6
-7 5
-9 0
-```
-
-通过50%，算法复杂度有点高，时间O(N^2)，考虑更简单的方法，比如dic空间换时间
+用dic加速，空间换时间
 
 ``` py
-import sys
-ch = sys.stdin.readline().strip()
-num=int(ch)
-grid=[]
-res=[]
-for i in range(num):
-    ch = sys.stdin.readline().strip()
-    tmp=[int(k) for k in ch.split()]
-    grid.append(tmp)
-n=len(grid)
-res.append(grid[0])
-for i in range(1,n):
-    j=0
-    flag=0
-    while res and j<=len(res)-1:
-        if grid[i][0]>res[j][0] and grid[i][1]>res[j][1]:
-            res.pop(j)
-        else:
-            if grid[i][0]<res[j][0] and grid[i][1]<res[j][1]:
-                flag=1
-            j+=1
-    if flag==0:
-        res.append(grid[i])
-res.sort(key=lambda x:x[0])
-for i in range(len(res)):
-    print(res[i][0],res[i][1])
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        dic={}
+        res=[]
+        for i in range(len(strs)):
+            strs_key=''.join(sorted(strs[i]))
+            if strs_key not in dic:
+                dic[strs_key]=[strs[i]]
+            else:
+                dic[strs_key].append(strs[i])
+        for k in dic:
+            res.append(dic[k])
+        return res
 ```
+
+## Pow(x, n)快速幂
+
+递归，时间复杂度为O(logN)
+
+不用递归直接暴力是O(N)
+
+``` py
+class Solution:
+    def myPow(self, x: float, n: int) -> float:
+        if n<0:
+            n = -n
+            return 1/self.help_(x,n)
+        return self.help_(x,n)
+
+    def help_(self,x,n):
+        if n==0:
+            return 1
+        if n%2 == 0:
+             #如果是偶数
+            return self.help_(x*x, n//2)
+        return self.help_(x*x,(n-1)//2)*x
+```
+
+## 最大子序和
+
+一看就是老DP了，很快的写一下
+
+``` py
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        if not nums:
+            return None
+        n=len(nums)
+        dp=[0 for _ in range(n)]
+        dp[0]=nums[0]
+        sum_max=dp[0]
+        for i in range(1,n):
+            if dp[i-1]>=0:
+                dp[i]=dp[i-1]+nums[i]
+            else:
+                dp[i]=nums[i]
+            sum_max=max(sum_max,dp[i])
+        return sum_max
+```
+
+## 螺旋矩阵
+
+剑指offer中的一个题目，需要考虑几种情况，我的方法是选定坐上角和右下角的元素，确定一个矩形框，然后在for循环取值出来。
+
+基本思想应该挺好理解的，画个图就能说清楚。
+
+``` py
+class Solution:
+    def spiralOrder(self, matrix: List[List[int]]) -> List[int]:
+        # 按层次来
+        if not matrix:
+            return []
+        n=len(matrix)
+        m=len(matrix[0])
+        i1=0
+        j1=0
+        i2=n-1-i1
+        j2=m-1-j1
+        res=[]
+        while i1<=i2 and j1<=j2:
+            if i1==i2:
+                for j in range(j1,j2+1):
+                    res.append(matrix[i1][j])
+                break
+            if j1==j2:
+                for i in range(i1,i2+1):
+                    res.append(matrix[i][j1])
+                break
+            for j in range(j1,j2):
+                res.append(matrix[i1][j])
+            for i in range(i1,i2):
+                res.append(matrix[i][j2])
+            for j in range(j2,j1,-1):
+                res.append(matrix[i2][j])
+            for i in range(i2,i1,-1):
+                res.append(matrix[i][j1])
+            i1+=1
+            j1+=1
+            i2-=1
+            j2-=1
+        return res
+```
+
+## 跳跃游戏
+
+应该是DP，想一下怎么搞出来，理论上应该是dp[i]表示该位置能够到达，首先dp[0]=1边界
+
+转移方程咋写，感觉是需要一波操作，首先看如果dp[i]==1, 那么nums[i]代表能够跳到nums[0+nums[0]]的地方，这样的话dp[i:i+nums[i]]全部改为1，可以逐步往后
+
+下面的写法超时了
+
+``` py
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        if not nums:
+            return False
+        n=len(nums)
+        dp=[0 for _ in range(n)]
+        dp[0]=1
+        for i in range(n):
+            if dp[i]==1:
+                for j in range(nums[i]+1):
+                    if i+j<=n-1:
+                        dp[i+j]=1
+                    else:
+                        break
+            # print(dp)
+        return True if dp[-1]==1 else False
+```
+
+看到有个C++的代码用的相同思路，但是其实不需要dp，只需要保存下来每一个点能够到达的最远点即可，这个想法神曲
+
+``` py
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        if not nums:
+            return False
+        n=len(nums)
+        k=0
+        for i in range(n):
+            if i>k:
+                return False
+            k=max(k,i+nums[i])
+        return True
+```
+
+## 颜色分类
+
+这个题中，数组只有三种元素：0 1 2，0总是放在最前，2总是放在最后，所以我们只要将0和2的位置放对，那么整个数组自然就有序了
+
+left表示左端0的位置，righ表示右端2的位置；cur遍历数组的索引
+如果nums[cur] == 0，我们只需要将当前元素和left表示的元素进行交换，并将left往后移动一位
+同理，如果nums[cur] == 1，我们只需要将当前元素和right表示的元素进行交换，并将right往前移动一位
+当 cur == right的时候，便结束循环
+
+三个指针法，left表示0的位置，right表示2的位置
+
+``` C
+int left = 0, right = nums.size() - 1, cur = 0;
+while(cur <= right){
+
+    if(nums[cur] == 0){
+        swap(nums[left++], nums[cur++]);
+    }else if(nums[cur] == 2){
+        swap(nums[right--], nums[cur]);
+    }else{
+        cur += 1;
+    }
+
+}
+```
+
+``` py
+class Solution:
+    def sortColors(self, nums: List[int]) -> None:
+        """
+        Do not return anything, modify nums in-place instead.
+        """
+        # dic=collections.Counter(nums)
+        # res=[0]*dic[0]+[1]*dic[1]+[2]*dic[2]
+        # nums[:]=res[:]
+        cur=0
+        left=0
+        right=len(nums)-1
+        while cur<=right:
+            if nums[cur]==0:
+                nums[cur],nums[left]=nums[left],nums[cur]
+                cur+=1
+                left+=1
+            elif nums[cur]==2:
+                nums[cur],nums[right]=nums[right],nums[cur]
+                right-=1
+            else:
+                cur+=1
+```
+
+## 最小覆盖子串
+
+滑动窗口的一般解决方法，设定一个left=0和right=0，先right+=1，然后等到match了之后保存一下res，这个时候再不断left+=1，直到不能match，保存最后能够match的res。
+
+``` py
+import collections
+
+class Solution:
+    def match_need(self, window, need):
+        for k in need:
+            if need[k] > window[k]:
+                return False
+        return True
+
+    def minWindow(self, s: str, t: str) -> str:
+        left = 0
+        right = 0
+        n = len(s)
+        min_len = n
+        window = {}
+        need = {}
+        res = []
+        for i in range(len(s)):
+            if s[i] not in window:
+                window[s[i]] = 0
+        for i in range(len(t)):
+            if t[i] not in window:
+                return ''
+            if t[i] not in need:
+                need[t[i]] = 1
+            else:
+                need[t[i]] += 1
+        while right <= n-1:
+            window[s[right]] += 1
+            if self.match_need(window, need):
+                # 改left
+                if right-left+1 <= min_len:
+                    min_len = right-left+1
+                    # print(left)
+                    res = s[left:right+1]
+                while left <= right:
+                    left += 1
+                    window[s[left-1]] -= 1
+                    if not self.match_need(window, need):
+                        # left-1到right是满足的最后一个记录一下
+                        if right-(left-1)+1 < min_len:
+                            min_len = right-(left-1)+1
+                            # print(left)
+                            res = s[left-1:right+1]
+                        right += 1
+                        break
+
+            else:
+                # 改right
+                right += 1
+        if res==[]:
+            return ''
+        else:
+            return res
+
+func = Solution()
+res = func.minWindow("a", "a")
+# print(res)
+```
+
+## 子集
 
