@@ -1,55 +1,58 @@
-import collections
+from collections import defaultdict
 
 
 class Solution:
-    def match_need(self, window, need):
-        for k in need:
-            if need[k] > window[k]:
-                return False
-        return True
 
-    def minWindow(self, s: str, t: str) -> str:
-        left = 0
-        right = 0
-        n = len(s)
-        min_len = n
-        window = {}
-        need = {}
-        res = []
-        for i in range(len(s)):
-            if s[i] not in window:
-                window[s[i]] = 0
-        for i in range(len(t)):
-            if t[i] not in window:
-                return ''
-            if t[i] not in need:
-                need[t[i]] = 1
-            else:
-                need[t[i]] += 1
-        while right <= n-1:
-            window[s[right]] += 1
-            if self.match_need(window, need):
-                # 改left
-                min_len = right-left+1
-                res = s[left:right+1]
-                while left <= right:
-                    left += 1
-                    window[s[left-1]] -= 1
-                    if not self.match_need(window, need):
-                        # left-1到right是满足的最后一个记录一下
-                        if right-(left-1)+1 < min_len:
-                            min_len = right-(left-1)+1
-                            # print(left)
-                            res = s[left-1:right+1]
-                        right += 1
-                        break
+    WHITE = 1
+    GRAY = 2
+    BLACK = 3
 
-            else:
-                # 改right
-                right += 1
-        return res
+    def findOrder(self, numCourses, prerequisites):
+        """
+        :type numCourses: int
+        :type prerequisites: List[List[int]]
+        :rtype: List[int]
+        """
 
+        # Create the adjacency list representation of the graph
+        adj_list = defaultdict(list)
 
-func = Solution()
-res = func.minWindow("a", "a")
-print(res)
+        # A pair [a, b] in the input represents edge from b --> a
+        for dest, src in prerequisites:
+            adj_list[src].append(dest)
+
+        topological_sorted_order = []
+        is_possible = True
+
+        # By default all vertces are WHITE
+        color = {k: Solution.WHITE for k in range(numCourses)}
+
+        def dfs(node):
+            nonlocal is_possible
+
+            # Don't recurse further if we found a cycle already
+            if not is_possible:
+                return
+
+            # Start the recursion
+            color[node] = Solution.GRAY
+
+            # Traverse on nei***oring vertices
+            if node in adj_list:
+                for neighbor in adj_list[node]:
+                    if color[neighbor] == Solution.WHITE:
+                        dfs(neighbor)
+                    elif color[neighbor] == Solution.GRAY:
+                         # An edge to a GRAY vertex represents a cycle
+                        is_possible = False
+
+            # Recursion ends. We mark it as black
+            color[node] = Solution.BLACK
+            topological_sorted_order.append(node)
+
+        for vertex in range(numCourses):
+            # If the node is unprocessed, then call dfs on it.
+            if color[vertex] == Solution.WHITE:
+                dfs(vertex)
+
+        return topological_sorted_order[::-1] if is_possible else []

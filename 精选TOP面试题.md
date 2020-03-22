@@ -1303,3 +1303,501 @@ res = func.minWindow("a", "a")
 
 ## 子集
 
+一般这种求枚举的我都是从小到大依次加元素进去，注意import copy然后用deepcopy()方法可以好一点，不要在这个地方出错就尴尬了。
+
+``` py
+import collections
+from typing import List
+import copy
+
+class Solution:
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        if not nums:
+            return []
+        res = []
+        res.append([])
+        for i in range(len(nums)):
+            cur = copy.deepcopy(res)
+            # print(i, cur)
+            for j in range(len(cur)):
+                cur[j].append(nums[i])
+            res.extend(cur)
+            # print(res)
+        return res
+
+func=Solution()
+res=func.subsets([1, 2, 3])
+# print(res)
+```
+
+## 单词搜索
+
+思路，DFS回溯法，一般遇到这种题目需要来一个mark来标记已经走过的位置，或者直接在原来的矩阵中标记走过的路径。这里用回溯法的一个坑，如果在一个方向上没有找到有用的，就回过来mark改为0！这一点很重要。
+
+``` py
+import collections
+from typing import List
+import copy
+
+class Solution:
+    def DFS(self, board, i, j, mark, word):
+        if word == '':
+            return True
+        direct = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+        row = len(board)
+        col = len(board[0])
+        for dir in range(4):
+            cur_i = i+direct[dir][0]
+            cur_j = j+direct[dir][1]
+            if cur_i < 0 or cur_i >= row or cur_j < 0 or cur_j >= col or mark[cur_i][cur_j] == 1:
+                continue
+            else:
+                if board[cur_i][cur_j] == word[0]:
+                    mark[cur_i][cur_j] = 1
+                    if self.DFS(board, cur_i, cur_j, mark, word[1:]):
+                        return True
+                    else:
+                        mark[cur_i][cur_j] = 0
+
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        if not board:
+            return False
+        row = len(board)
+        col = len(board[0])
+        mark = [[0 for _ in range(col)] for _ in range(row)]
+        for i in range(row):
+            for j in range(col):
+                if board[i][j] == word[0]:
+                    mark[i][j] = 1
+                    if self.DFS(board, i, j, mark, word[1:]):
+                        return True
+                    else:
+                        mark[i][j] = 0
+
+        return False
+
+# func = Solution()
+# board = [
+#     ['A', 'B', 'C', 'E'],
+#     ['S', 'F', 'C', 'S'],
+#     ['A', 'D', 'E', 'E']
+# ]
+# res = func.exist(board, "ABCB")
+# print(res)
+```
+
+## 删除排序数组中的重复项 II
+
+双指针，搞清楚什么时候覆盖，不是交换！！！
+
+``` py
+class Solution:
+    def removeDuplicates(self, nums: List[int]) -> int:
+        # 第一反应双指针
+        count=1
+        right=1
+        left=1
+        while right<=len(nums)-1:
+            if nums[right] == nums[right - 1]:
+                count += 1
+            else:
+                count=1
+            if count<=2:
+                nums[left]=nums[right]
+                left+=1
+            right+=1
+        return left
+```
+
+## 删除排序链表中的重复元素 II
+
+老双指针了，删除元素的时候判断一下该元素后面有没有元素，有元素的话是不是和该元素的值一毛一样，一样的话就删除后面所有一样的节点，再把自己删掉，不一样就跳过。
+
+``` py
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution:
+    def deleteDuplicates(self, head: ListNode) -> ListNode:
+        # 三指针
+        if not head:
+            return None
+        PHEAD=ListNode(None)
+        pre=PHEAD
+        pre.next=head
+        cur=head
+        while cur:
+            las=cur.next
+            if las and cur.val==las.val:
+                # 不断删除后面一个节点如果是相同的值的话，并且需要把这个节点也去掉
+                while cur.next and cur.val==cur.next.val:
+                    cur.next=cur.next.next
+                # cur此时为单独的值再把这个值去掉即可
+                pre.next=cur.next
+                cur=cur.next
+            else:
+                pre=pre.next
+                cur=cur.next
+        return PHEAD.next
+```
+
+## 柱状图中最大的矩形
+
+分治算法，有一点暴力
+
+``` py
+import collections
+from typing import List
+import copy
+
+class Solution:
+    def __init__(self):
+        self.vol = 0
+
+    def splitrectanglge(self, heights, l, r):
+        if l == r:
+            self.vol = max(self.vol, heights[l])
+        else:
+            min_id = -1
+            min_high = float('inf')
+            for i in range(l, r+1):
+                if heights[i] < min_high:
+                    min_high = heights[i]
+                    min_id = i
+            self.vol=max(self.vol,heights[min_id]*(r-l+1))
+            if min_id == l:
+                self.splitrectanglge(heights, min_id+1, r)
+            elif min_id == r:
+                self.splitrectanglge(heights, l, min_id-1)
+            else:
+                self.splitrectanglge(heights, min_id+1, r)
+                self.splitrectanglge(heights, l, min_id-1)
+
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        # 分治算法
+        self.splitrectanglge(heights, 0, len(heights)-1)
+        return self.vol
+
+func = Solution()
+res = func.largestRectangleArea([2, 1, 5, 6, 2, 3])
+print(res)
+```
+
+想办法优化这个算法, 看了一个直接return的思路。都会超时
+
+``` py
+import collections
+from typing import List
+import copy
+
+class Solution:
+    def splitrectanglge(self, heights, l, r):
+        if l > r:
+            return 0
+        min_id = l
+        for i in range(l, r+1):
+            if heights[min_id] > heights[i]:
+                min_id = i
+        left = self.splitrectanglge(heights, l, min_id-1)
+        right = self.splitrectanglge(heights, min_id+1, r)
+        mid = heights[min_id]*(r-l+1)
+        return max(max(left, right), mid)
+
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        # 分治算法
+        return self.splitrectanglge(heights, 0, len(heights)-1)
+
+func = Solution()
+res = func.largestRectangleArea([2, 1, 5, 6, 2, 3])
+print(res)
+```
+
+优化版本的思路，非单调递增栈！不会
+
+## 岛屿数量
+
+DFS，注意python是写在函数里面的，调用的都是全局的变量
+
+``` py
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        # DFS
+        if not grid:
+            return 0
+        row=len(grid)
+        col=len(grid[0])
+        def dfs(i,j):
+            grid[i][j]='0'
+            direction=[[-1,0],[0,1],[1,0],[0,-1]]
+            for k in range(4):
+                cur_i=i+direction[k][0]
+                cur_j=j+direction[k][1]
+                if cur_i<0 or cur_i>=row or cur_j<0 or cur_j>=col:
+                    continue
+                else:
+                    if grid[cur_i][cur_j]=='1':
+                        dfs(cur_i,cur_j)
+        count=0
+        for i in range(row):
+            for j in range(col):
+                if grid[i][j]=='1':
+                    count+=1
+                    dfs(i,j)
+        return count
+```
+
+## 课程表
+
+BFS
+
+算法流程：
+统计课程安排图中每个节点的入度，生成 入度表 indegrees。
+借助一个队列 queue，将所有入度为 00 的节点入队。
+当 queue 非空时，依次将队首节点出队，在课程安排图中删除此节点 pre：
+并不是真正从邻接表中删除此节点 pre，而是将此节点对应所有邻接节点 cur 的入度 -1−1，即 indegrees[cur] -= 1。
+当入度 -1−1后邻接节点 cur 的入度为 00，说明 cur 所有的前驱节点已经被 “删除”，此时将 cur 入队。
+在每次 pre 出队时，执行 numCourses--；
+若整个课程安排图是有向无环图（即可以安排），则所有节点一定都入队并出队过，即完成拓扑排序。换个角度说，若课程安排图中存在环，一定有节点的入度始终不为 00。
+因此，拓扑排序出队次数等于课程个数，返回 numCourses == 0 判断课程是否可以成功安排。
+
+``` py
+from collections import deque
+
+class Solution:
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        indegrees = [0 for _ in range(numCourses)]
+        adjacency = [[] for _ in range(numCourses)]
+        queue = deque()
+        # Get the indegree and adjacency of every course.
+        for cur, pre in prerequisites:
+            indegrees[cur] += 1
+            adjacency[pre].append(cur)
+        # Get all the courses with the indegree of 0.
+        for i in range(len(indegrees)):
+            if not indegrees[i]: queue.append(i)
+        # BFS TopSort.
+        while queue:
+            pre = queue.popleft()
+            numCourses -= 1
+            for cur in adjacency[pre]:
+                indegrees[cur] -= 1
+                if not indegrees[cur]: queue.append(cur)
+        return not numCourses
+```
+
+DFS
+
+``` py
+class Solution:
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        def dfs(i, adjacency, flags):
+            # 没有环输出True
+            if flags[i] == -1: return True
+            if flags[i] == 1: return False
+            flags[i] = 1
+            for j in adjacency[i]:
+                if dfs(j, adjacency, flags)==False:
+                    return False
+            flags[i] = -1
+            return True
+
+        adjacency = [[] for _ in range(numCourses)]
+        flags = [0 for _ in range(numCourses)]
+        for cur, pre in prerequisites:
+            adjacency[pre].append(cur)
+        for i in range(numCourses):
+            if not dfs(i, adjacency, flags): return False
+        return True
+```
+
+图的邻接表表示法：
+
+``` py
+#图的邻接链表表示法
+graph = {'A': ['B', 'C'],
+        'B': ['C', 'D'],
+        'C': ['D'],
+        'D': ['C','G','H'],
+        'E': ['F'],
+        'F': ['C']}
+```
+
+也可以加上边的长度也可以
+
+``` py
+#图的邻接链表表示法
+graph = {'A': [['B',1], ['C',2]],
+        'B': [['C',2], ['D',4]]}
+```
+
+拓扑排序，要看一个节点的入度，一直把入度为0的节点提取出来，然后把这些点的边的出口的入度-1然后迭代。
+
+``` py
+#遍历图中所有顶点，按照遍历顺序将顶点添加到列表中
+vertex = []
+def dfs(v):
+    if v not in graph:
+        return
+    for vv in graph[v]:
+        if vv not in vertex:
+            vertex.append(vv)
+            dfs(vv)
+
+for v in graph:
+    if v not in vertex:
+        vertex.append(v)
+        dfs(v)
+print(vertex)
+```
+
+``` py
+#从图中找出从起始顶点到终止顶点的所有路径
+import copy
+
+def find_path_all(curr, end, path):
+    '''
+    :param curr: 当前顶点
+    :param end: 要到达的顶点
+    :param path: 当前顶点的一条父路径
+    :return:
+    '''
+    if curr == end:
+        path_tmp = copy.deepcopy(path)
+        path_all.append(path_tmp)
+        return
+    if not graph.get(curr):
+        return
+    for v in graph[curr]:
+        #一个顶点在当前递归路径中只能出现一次，否则会陷入死循环。
+        if v in path:
+            print("v %s in path %s" %(v, path))
+            continue
+        #构造下次递归的父路径
+        path.append(v)
+        find_path_all(v,end,path)
+        path.pop()
+
+path_all = []
+find_path_all('A', 'G',path=['A'])
+print(path_all)
+```
+
+``` py
+#从图中找出任意一条从起始顶点到终止顶点的路径
+def find_path(graph, start, end, path=[]):
+    if start == end:
+        print "path", path
+        return True
+    if not graph.get(start):
+        path.pop()
+        return False
+    for v in graph[start]:
+        if v not in path:
+            path.append(v)
+            if find_path(graph,v,end,path):
+                return True
+    return False
+
+path = []
+if find_path(graph, 'A', 'C', path=path):
+    print(path)
+else:
+    print(1)
+```
+
+## 二叉搜索树中第K小的元素
+
+中序遍历是一个排好序的数组，可以用迭代加上count来中断，加速判断，也可以保存这个数组，方便每一次取第k个最小数
+
+``` py
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def kthSmallest(self, root: TreeNode, k: int) -> int:
+        if not root:
+            return None
+        s=[]
+        node=root
+        res=[]
+        while node or s:
+            while node:
+                s.append(node)
+                node=node.left
+            node=s.pop()
+            res.append(node.val)
+            node=node.right
+        return res[k-1]
+```
+
+## 课程表II
+
+BFS，入度为0进队列
+
+``` py
+import collections
+class Solution:
+    def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
+        adj = collections.defaultdict(list)
+        indegree=[0 for _ in range(numCourses)]
+        for cur,pre in prerequisites:
+            adj[pre].append(cur)
+            indegree[cur]+=1
+        res=[]
+        queue=collections.deque()
+        for i in range(numCourses):
+            if indegree[i]==0:
+                queue.append(i)
+        while queue:
+            cur=queue.popleft()
+            res.append(cur)
+            numCourses-=1
+            for nb in adj[cur]:
+                indegree[nb]-=1
+                if indegree[nb]==0:
+                    queue.append(nb)
+        if numCourses==0:
+            return res
+        else:
+            return []
+```
+
+DFS，标记-1, 1, 0，用flag来表示
+
+``` py
+import collections
+
+class Solution:
+    def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
+        adj = collections.defaultdict(list)
+        for cur, pre in prerequisites:
+            adj[pre].append(cur)
+        flag = [0 for _ in range(numCourses)]
+        res = []
+
+        def dfs(i, adj, flag):
+            # 如果没有环，就返回True
+            if flag[i] == -1:  # 被别的线程访问过，直接返回
+                return True
+            if flag[i] == 1:  # 当前线程访问过，有环
+                return False
+            flag[i] = 1
+            for nb in adj[i]:
+                if dfs(nb, adj, flag) == False:
+                    return False
+            flag[i] = -1
+            res.append(i)
+            return True
+        for i in range(numCourses):
+            if dfs(i, adj, flag) == False:
+                return []
+        return res[::-1]
+```
+
