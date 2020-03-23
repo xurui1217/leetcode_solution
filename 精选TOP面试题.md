@@ -1801,3 +1801,27 @@ class Solution:
         return res[::-1]
 ```
 
+## 存在重复元素
+
+``` py
+import collections
+class Solution:
+    def containsDuplicate(self, nums: List[int]) -> bool:
+        dic=collections.Counter(nums)
+        for k in dic:
+            if dic[k]>=2:
+                return True
+        return False
+```
+
+## 数组中的第K个最大元素
+
+``` py
+import heapq
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        q=heapq.nlargest(k,nums)
+        return q[-1]
+```
+
+## 

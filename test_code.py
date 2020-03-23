@@ -1,58 +1,19 @@
-from collections import defaultdict
+from typing import List
 
 
 class Solution:
+    def getSkyline(self, buildings: List[List[int]]) -> List[List[int]]:
+        if not buildings:
+            return []
+        res = []
+        for k in buildings:
+            res.append([k[0], k[2]])
+            res.append([k[1], 0])
+        res.sort(key=lambda x: x[0])
+        return res
 
-    WHITE = 1
-    GRAY = 2
-    BLACK = 3
 
-    def findOrder(self, numCourses, prerequisites):
-        """
-        :type numCourses: int
-        :type prerequisites: List[List[int]]
-        :rtype: List[int]
-        """
-
-        # Create the adjacency list representation of the graph
-        adj_list = defaultdict(list)
-
-        # A pair [a, b] in the input represents edge from b --> a
-        for dest, src in prerequisites:
-            adj_list[src].append(dest)
-
-        topological_sorted_order = []
-        is_possible = True
-
-        # By default all vertces are WHITE
-        color = {k: Solution.WHITE for k in range(numCourses)}
-
-        def dfs(node):
-            nonlocal is_possible
-
-            # Don't recurse further if we found a cycle already
-            if not is_possible:
-                return
-
-            # Start the recursion
-            color[node] = Solution.GRAY
-
-            # Traverse on nei***oring vertices
-            if node in adj_list:
-                for neighbor in adj_list[node]:
-                    if color[neighbor] == Solution.WHITE:
-                        dfs(neighbor)
-                    elif color[neighbor] == Solution.GRAY:
-                         # An edge to a GRAY vertex represents a cycle
-                        is_possible = False
-
-            # Recursion ends. We mark it as black
-            color[node] = Solution.BLACK
-            topological_sorted_order.append(node)
-
-        for vertex in range(numCourses):
-            # If the node is unprocessed, then call dfs on it.
-            if color[vertex] == Solution.WHITE:
-                dfs(vertex)
-
-        return topological_sorted_order[::-1] if is_possible else []
+func = Solution()
+res = func.getSkyline(
+    [[2, 9, 10], [3, 7, 15], [5, 12, 12], [15, 20, 10], [19, 24, 8]])
+print(res)
