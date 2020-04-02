@@ -1240,7 +1240,7 @@ class Solution:
         r = right
         key = numbers[l]
         while l < r:
-            while l < r and numbers[r] >= key:
+            while l < r and key <= numbers[r]:
                 r -= 1
             while l < r and numbers[l] <= key:
                 l += 1

@@ -1824,4 +1824,296 @@ class Solution:
         return q[-1]
 ```
 
+## 天际线问题
+
+首先看一下优先级队列，其实python有heapq可以直接在list里实现最小堆。
+
+``` py
+q=[]
+heapq.heappush(q, (3, 'code'))
+heapq.heappush(q, (2, 'eat'))
+heapq.heappush(q, (5, 'fuck'))
+a=heapq.heappop(q)
+print(a)
+```
+
+扫描法
+
+## 单词搜索 II
+
+DFS方法超出时间限制
+
+``` py
+from typing import List
+import heapq
+
+class Solution:
+    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        row = len(board)
+        col = len(board[0])
+
+        def dfs(i, j, flag, word):
+            if word == '':
+                return True
+            directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+            for k in range(4):
+                cur_i = i+directions[k][0]
+                cur_j = j+directions[k][1]
+                if cur_i < 0 or cur_i >= row or cur_j < 0 or cur_j >= col or flag[cur_i][cur_j] == 1:
+                    continue
+                else:
+                    if board[cur_i][cur_j] == word[0]:
+                        flag[cur_i][cur_j] = 1
+                        if dfs(cur_i, cur_j, flag, word[1:]):
+                            flag[cur_i][cur_j] = 0
+                            return True
+                        else:
+                            flag[cur_i][cur_j] = 0
+        if not board:
+            return []
+        dic = {}
+        for k in words:
+            if k[0] in dic:
+                dic[k[0]].append(k)
+            else:
+                dic[k[0]] = [k]
+        print(dic)
+        res = []
+        flag = [[0 for _ in range(col)] for _ in range(row)]
+        for i in range(row):
+            for j in range(col):
+                if board[i][j] in dic:
+                    for word in dic[board[i][j]]:
+                        flag[i][j] = 1
+                        if dfs(i, j, flag, word[1:]) == True:
+                            res.append(word)
+                            dic[board[i][j]].remove(word)
+                        flag[i][j] = 0
+        return res
+
+func = Solution()
+res = func.findWords(
+    [["o", "a", "a", "n"], ["e", "t", "a", "e"], [
+        "i", "h", "k", "r"], ["i", "f", "l", "v"]],
+    ["oath", "pea", "eat", "rain"])
+# print(res)
+```
+
+## 二叉树的公共节点
+
+``` txt
+当我们用递归去做这个题时不要被题目误导，应该要明确一点
+这个函数的功能有三个：给定两个节点 pp 和 qq
+
+如果 pp 和 qq 都存在，则返回它们的公共祖先；
+如果只存在一个，则返回存在的一个；
+如果 pp 和 qq 都不存在，则返回NULL
+本题说给定的两个节点都存在，那自然还是能用上面的函数来解决
+
+具体思路：
+（1） 如果当前结点 rootroot 等于NULL，则直接返回NULL
+（2） 如果 rootroot 等于 pp 或者 qq ，那这棵树一定返回 pp 或者 qq
+（3） 然后递归左右子树，因为是递归，使用函数后可认为左右子树已经算出结果，用 leftleft 和 rightright 表示
+（4） 此时若leftleft为空，那最终结果只要看 rightright；若 rightright 为空，那最终结果只要看 leftleft
+（5） 如果 leftleft 和 rightright 都非空，因为只给了 pp 和 qq 两个结点，都非空，说明一边一个，因此 rootroot 是他们的最近公共祖先
+（6） 如果 leftleft 和 rightright 都为空，则返回空（其实已经包含在前面的情况中了）
+
+时间复杂度是O(n)O(n)：每个结点最多遍历一次或用主定理，空间复杂度是O(n)O(n)：需要系统栈空间
+```
+
+``` py
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        if root==None:
+            return None
+        if root==p or root==q:
+            return root
+        left=self.lowestCommonAncestor(root.left,p,q)
+        right=self.lowestCommonAncestor(root.right,p,q)
+        if left==None:
+            return right
+        if right==None:
+            return left
+        if left and right:
+            return root
+        return None
+```
+
+## 除自身以外数组的乘积
+
+``` py
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        if not nums:
+            return []
+        n=len(nums)
+        pre=[0 for _ in range(n)]
+        mul=1
+        for i in range(n):
+            pre[i]=mul
+            mul*=nums[i]
+        las=[0 for _ in range(n)]
+        mul=1
+        for i in range(n-1,-1,-1):
+            las[i]=mul
+            mul*=nums[i]
+        res=[0 for _ in range(n)]
+        for i in range(n):
+            res[i]=pre[i]*las[i]
+        return res
+```
+
+## 滑动窗口最大值
+
+heapq的删除元素方法
+
+``` py
+# OlogN
+h[i] = h[-1]
+h.pop()
+heapq._siftup(h, i)
+heapq._siftdown(h, 0, i)
+```
+
+``` py
+# ON
+h[i] = h[-1]
+h.pop()
+heapq.heapify(h)
+```
+
+用了最小堆来写，复杂度应该是在O(NK)
+
+``` py
+import heapq
+class Solution:
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        if not nums:
+            return []
+        q=[]
+        res=[]
+        nums=[-w for w in nums]
+        for i in range(k):
+            heapq.heappush(q,nums[i])
+        res.append(q[0]*-1)
+        for i in range(k,len(nums)):
+            q.remove(nums[i-k])
+            heapq.heappush(q,nums[i])
+            heapq.heapify(q)
+            res.append(q[0]*-1)
+        return res
+```
+
+可以用单调队列来进一步降低复杂度O(N)
+
+``` py
+# 暂时还没有想出来
+```
+
+## 搜索二维矩阵 II
+
+剑指offer上面一毛一样的题目
+
+``` py
+class Solution:
+    def searchMatrix(self, matrix, target):
+        """
+        :type matrix: List[List[int]]
+        :type target: int
+        :rtype: bool
+        """
+        # 这不剑指offer里面的题目嘛，从右上方开始搜素，往左下方搜索
+        if not matrix:
+            return False
+        n=len(matrix)
+        m=len(matrix[0])
+        i=0
+        j=m-1
+        while 0<=i<=n-1 and 0<=j<=m-1:
+            if matrix[i][j]==target:
+                return True
+            elif target<matrix[i][j]:
+                j-=1
+            elif matrix[i][j]<target:
+                i+=1
+        return False
+```
+
+## 有效的字母异位词
+
+哈希表
+
+``` py
+import collections
+class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        dic1=collections.Counter(s)
+        for k in t:
+            if k not in dic1:
+                return False
+            else:
+                dic1[k]-=1
+            if dic1[k]==0:
+                dic1.pop(k)
+        if dic1=={}:
+            return True
+        else:
+            return False
+```
+
+## 生命游戏
+
+一种需要另外开辟空间的方法
+
+``` py
+class Solution:
+    def getlife(self,board,i,j):
+        n=len(board)
+        m=len(board[0])
+        directions=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+        count=0
+        for direct in directions:
+            cur_i=i+direct[0]
+            cur_j=j+direct[1]
+            if 0<=cur_i<=n-1 and 0<=cur_j<=m-1:
+                if board[cur_i][cur_j]==1:
+                    count+=1
+        return count
+
+    def gameOfLife(self, board: List[List[int]]) -> None:
+        """
+        Do not return anything, modify board in-place instead.
+        """
+        if not board:
+            return None
+        n=len(board)
+        m=len(board[0])
+        mark=[[0 for _ in range(m)] for _ in range(n)]
+        for i in range(n):
+            for j in range(m):
+                count=self.getlife(board,i,j)
+                if board[i][j]==1:
+                    if count<2:
+                        mark[i][j]=0
+                    elif 2<=count<=3:
+                        mark[i][j]=1
+                    elif count>3:
+                        mark[i][j]=0
+                else:
+                    if count==3:
+                        mark[i][j]=1
+        for i in range(n):
+            for j in range(m):
+                board[i][j]=mark[i][j]
+```
+
+一种不需要额外空间的办法，可以用奇偶性来判断是否是活细胞或者死细胞
+
 ## 
